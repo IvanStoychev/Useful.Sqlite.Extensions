@@ -1,0 +1,23 @@
+{
+  "runtimeTarget": {
+    "name": ".NETCoreApp,Version=v3.1",
+    "signature": ""
+  },
+  "compilationOptions": {},
+  "targets": {
+    ".NETCoreApp,Version=v3.1": {
+      "Useful.Sqlite.Extensions/1.0.0": {
+        "runtime": {
+          "Useful.Sqlite.Extensions.dll": {}
+        }
+      }
+    }
+  },
+  "libraries": {
+    "Useful.Sqlite.Extensions/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    }
+  }
+}

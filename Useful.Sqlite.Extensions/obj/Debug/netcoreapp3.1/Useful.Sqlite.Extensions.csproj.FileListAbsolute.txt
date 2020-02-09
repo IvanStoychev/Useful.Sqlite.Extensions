@@ -1,5 +1,0 @@
-J:\Users\Administrator\Source\Repos\Useful.Sqlite.Extensions\Useful.Sqlite.Extensions\bin\Debug\netcoreapp3.1\Useful.Sqlite.Extensions.deps.json
-J:\Users\Administrator\Source\Repos\Useful.Sqlite.Extensions\Useful.Sqlite.Extensions\bin\Debug\netcoreapp3.1\Useful.Sqlite.Extensions.dll
-J:\Users\Administrator\Source\Repos\Useful.Sqlite.Extensions\Useful.Sqlite.Extensions\obj\Debug\netcoreapp3.1\Useful.Sqlite.Extensions.csprojAssemblyReference.cache
-J:\Users\Administrator\Source\Repos\Useful.Sqlite.Extensions\Useful.Sqlite.Extensions\obj\Debug\netcoreapp3.1\Useful.Sqlite.Extensions.AssemblyInfoInputs.cache
-J:\Users\Administrator\Source\Repos\Useful.Sqlite.Extensions\Useful.Sqlite.Extensions\obj\Debug\netcoreapp3.1\Useful.Sqlite.Extensions.AssemblyInfo.cs

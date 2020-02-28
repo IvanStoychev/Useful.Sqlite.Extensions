@@ -2,110 +2,142 @@ using System;
 using System.Data.SQLite;
 using Xunit;
 using Useful.Sqlite.Extensions;
+using System.Globalization;
 
 namespace Useful.Sqlite.Extensions.Tests
 {
     public class SQLiteDataReaderExtensions_Tests
     {
+        SQLiteConnection connection = new SQLiteConnection("Data Source = :memory:");
+
         [Theory]
         [InlineData("05")]
         [InlineData("03:01")]
         [InlineData("05:03:01")]
         [InlineData("11:05:03:01")]
         [InlineData("1:07:08:11.1634")]
-        public void GetTimeSpanFromString_Test_Pass(string timeSpan)
+        public void GetTimeSpanFromString_Test_Pass(string testTimeSpan)
         {
-            #region Setup
-            SQLiteConnection connection = new SQLiteConnection("Data Source = :memory:");
-            connection.Open();
-            string createTableStatement = "CREATE TABLE test (TimeSpan nvarchar(10))";
-            SQLiteCommand createTableCommand = new SQLiteCommand(createTableStatement, connection);
-            createTableCommand.ExecuteNonQuery();
-            string insertStatement = $"INSERT INTO test VALUES ('{timeSpan}')";
-            SQLiteCommand insertCommand = new SQLiteCommand(insertStatement, connection);
-            insertCommand.ExecuteNonQuery();
-            #endregion Setup
+            SQLiteDatabaseSetup("nvarchar(10)", $"'{testTimeSpan}'");
 
-            #region Execution
-            string selectStatement = "SELECT * FROM test";
-            SQLiteCommand selectCommand = new SQLiteCommand(selectStatement, connection);
-            SQLiteDataReader reader = selectCommand.ExecuteReader();
-            reader.Read();
+            SQLiteDataReader reader = SQLiteSelectDataReader();
             TimeSpan actual = reader.GetTimeSpanFromString(0);
-            TimeSpan expected = TimeSpan.Parse(timeSpan);
-
+            TimeSpan expected = TimeSpan.Parse(testTimeSpan);
             Assert.Equal(expected, actual);
-            #endregion Execution
 
-            #region Teardown
-            connection.Dispose();
-            #endregion Teardown
+            SQLiteDatabaseTearDown();
         }
 
+        #region GetTimeSpanTicksFromLong Tests
         [Theory]
         [InlineData(13624)]
         [InlineData(246246)]
         [InlineData(234)]
         [InlineData(247536)]
         [InlineData(32875227)]
-        public void GetTimeSpanTicksFromLong_Test_Pass(long ticks)
+        public void GetTimeSpanTicksFromLong_Test_Pass(long testTicks)
         {
-            #region Setup
-            SQLiteConnection connection = new SQLiteConnection("Data Source = :memory:");
-            connection.Open();
-            string createTableStatement = "CREATE TABLE test (TimeSpan integer)";
-            SQLiteCommand createTableCommand = new SQLiteCommand(createTableStatement, connection);
-            createTableCommand.ExecuteNonQuery();
-            string insertStatement = $"INSERT INTO test VALUES ({ticks})";
-            SQLiteCommand insertCommand = new SQLiteCommand(insertStatement, connection);
-            insertCommand.ExecuteNonQuery();
-            #endregion Setup
+            SQLiteDatabaseSetup("integer", testTicks.ToString());
 
-            #region Execution
-            string selectStatement = "SELECT * FROM test";
-            SQLiteCommand selectCommand = new SQLiteCommand(selectStatement, connection);
-            SQLiteDataReader reader = selectCommand.ExecuteReader();
-            reader.Read();
+            SQLiteDataReader reader = SQLiteSelectDataReader();
             TimeSpan actual = reader.GetTimeSpanTicksFromLong(0);
-            TimeSpan expected = new TimeSpan(ticks);
-
+            TimeSpan expected = new TimeSpan(testTicks);
             Assert.Equal(expected, actual);
-            #endregion Execution
 
-            #region Teardown
-            connection.Dispose();
-            #endregion Teardown
+            SQLiteDatabaseTearDown();
         }
 
         [Fact]
         public void GetTimeSpanTicksFromLong_Test_Fail()
         {
-            #region Setup
-            SQLiteConnection connection = new SQLiteConnection("Data Source = :memory:");
+            SQLiteDatabaseSetup("integer", "'asd'");
+
+            SQLiteDataReader reader = SQLiteSelectDataReader();
+            int columnNumber = 0;
+            string expectedMessage = $"The value in column {columnNumber} could not be cast to long.";
+            Action action = () => reader.GetTimeSpanTicksFromLong(columnNumber);
+            Exception ex = Assert.Throws<InvalidCastException>(action);
+            Assert.Equal(expectedMessage, ex.Message);
+
+            SQLiteDatabaseTearDown();
+        }
+        #endregion GetTimeSpanTicksFromLong Tests
+
+        #region GetDateTime Tests
+        [Theory]
+        [InlineData("2012-05-18", "yyyy-MM-dd")]
+        [InlineData("2013-17-08", "yyyy-dd-MM")]
+        [InlineData("03-19-2011", "MM-dd-yyyy")]
+        [InlineData("20-05-2018", "dd-MM-yyyy")]
+        public void GetDateTime_Test_Pass(string testDateTime, string format)
+        {
+            SQLiteDatabaseSetup("DateTime", $"'{testDateTime}'");
+
+            SQLiteDataReader reader = SQLiteSelectDataReader();
+            DateTime actual = reader.GetDateTime(0, format);
+            DateTime expected = DateTime.ParseExact(testDateTime, format, null);
+
+            Assert.Equal(expected, actual);
+
+            SQLiteDatabaseTearDown();
+        }
+
+        [Theory]
+        [InlineData("2012-05-18", "yyyy-MM-dd", "en-US")]
+        [InlineData("2013-17-08", "yyyy-dd-MM", "es-ES")]
+        [InlineData("03-19-2011", "MM-dd-yyyy", "it-IT")]
+        [InlineData("20-05-2018", "dd-MM-yyyy", "fr-FR")]
+        public void GetDateTimeIFormatProvider_Test_Pass(string testDateTime, string format, string culture)
+        {
+            CultureInfo cultureInfo = new CultureInfo(culture);
+            SQLiteDatabaseSetup("DateTime", $"'{testDateTime}'");
+
+            SQLiteDataReader reader = SQLiteSelectDataReader();
+            DateTime actual = reader.GetDateTime(0, format, cultureInfo);
+            DateTime expected = DateTime.ParseExact(testDateTime, format, cultureInfo);
+
+            Assert.Equal(expected, actual);
+
+            SQLiteDatabaseTearDown();
+        }
+        #endregion GetDateTime Tests
+
+        /// <summary>
+        /// Opens the connection to the in-memory database, creates a table and inserts a value into it.
+        /// </summary>
+        /// <param name="testValueType">The type of the table column that will hold the test value.</param>
+        /// <param name="testValue">The value to insert into the test table.</param>
+        void SQLiteDatabaseSetup(string testValueType, string testValue)
+        {
             connection.Open();
-            string createTableStatement = "CREATE TABLE test (TimeSpan integer)";
+            string createTableStatement = $"CREATE TABLE test (testValue {testValueType})";
             SQLiteCommand createTableCommand = new SQLiteCommand(createTableStatement, connection);
             createTableCommand.ExecuteNonQuery();
-            string insertStatement = $"INSERT INTO test VALUES ('asd')";
+            string insertStatement = $"INSERT INTO test VALUES ({testValue})";
             SQLiteCommand insertCommand = new SQLiteCommand(insertStatement, connection);
             insertCommand.ExecuteNonQuery();
-            #endregion Setup
+        }
 
-            #region Execution
+        /// <summary>
+        /// Gets an SQLiteDataReader with loaded the test value from the database.
+        /// </summary>
+        /// <returns>An SQLiteDataReader already having read the test value from the database.</returns>
+        SQLiteDataReader SQLiteSelectDataReader()
+        {
             string selectStatement = "SELECT * FROM test";
             SQLiteCommand selectCommand = new SQLiteCommand(selectStatement, connection);
             SQLiteDataReader reader = selectCommand.ExecuteReader();
             reader.Read();
 
-            string expectedMessage = "The value in column 0 could not be cast to long.";
-            Action action = () => reader.GetTimeSpanTicksFromLong(0);
-            Exception ex = Assert.Throws<InvalidCastException>(action);
-            Assert.Equal(expectedMessage, ex.Message);
-            #endregion Execution
+            return reader;
+        }
 
-            #region Teardown
+        /// <summary>
+        /// Disposes of the SQLiteConnection.
+        /// </summary>
+        void SQLiteDatabaseTearDown()
+        {
             connection.Dispose();
-            #endregion Teardown
         }
     }
 }

@@ -5,10 +5,15 @@
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
     <Description>A collection of extension methods, that make your life easier, for System.Data.Sqlite.</Description>
-    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageLicenseExpression></PackageLicenseExpression>
     <Copyright>Ivan Stoychev</Copyright>
     <PackageTags>sqlite, extension, useful</PackageTags>
     <PackageReleaseNotes>First release.</PackageReleaseNotes>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
+    <PackageProjectUrl>https://github.com/IvanStoychev/Useful.Sqlite.Extensions/wiki</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/IvanStoychev/Useful.Sqlite.Extensions</RepositoryUrl>
+    <Authors>Ivan Stoychev</Authors>
+    <Version>1.0.0</Version>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -17,6 +22,13 @@
 
   <ItemGroup>
     <PackageReference Include="System.Data.SQLite" Version="1.0.112" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\LICENSE">
+      <Pack>True</Pack>
+      <PackagePath></PackagePath>
+    </None>
   </ItemGroup>
 
 </Project>

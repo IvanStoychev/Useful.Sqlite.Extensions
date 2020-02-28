@@ -30,7 +30,12 @@ namespace Useful.Sqlite.Extensions
         /// <returns>A TimeSpan with the column value as the number of ticks.</returns>
         public static TimeSpan GetTimeSpanTicksFromLong(this SQLiteDataReader reader, int columnNumber)
         {
-            long ticks = reader.GetInt64(columnNumber);
+            long ticks = 0;
+
+            try { ticks = reader.GetInt64(columnNumber); }
+            catch (InvalidCastException)
+            { throw new InvalidCastException($"The value in column {columnNumber} could not be cast to long."); }
+
             TimeSpan result = new TimeSpan(ticks);
 
             return result;

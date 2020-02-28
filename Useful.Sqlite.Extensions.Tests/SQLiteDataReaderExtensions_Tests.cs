@@ -13,7 +13,7 @@ namespace Useful.Sqlite.Extensions.Tests
         [InlineData("05:03:01")]
         [InlineData("11:05:03:01")]
         [InlineData("1:07:08:11.1634")]
-        public void GetTimeSpanFromString_Test(string timeSpan)
+        public void GetTimeSpanFromString_Test_Pass(string timeSpan)
         {
             #region Setup
             SQLiteConnection connection = new SQLiteConnection("Data Source = :memory:");
@@ -48,7 +48,7 @@ namespace Useful.Sqlite.Extensions.Tests
         [InlineData(234)]
         [InlineData(247536)]
         [InlineData(32875227)]
-        public void GetTimeSpanTicksFromLong_Test(long ticks)
+        public void GetTimeSpanTicksFromLong_Test_Pass(long ticks)
         {
             #region Setup
             SQLiteConnection connection = new SQLiteConnection("Data Source = :memory:");
@@ -56,7 +56,7 @@ namespace Useful.Sqlite.Extensions.Tests
             string createTableStatement = "CREATE TABLE test (TimeSpan integer)";
             SQLiteCommand createTableCommand = new SQLiteCommand(createTableStatement, connection);
             createTableCommand.ExecuteNonQuery();
-            string insertStatement = $"INSERT INTO test VALUES ('{ticks}')";
+            string insertStatement = $"INSERT INTO test VALUES ({ticks})";
             SQLiteCommand insertCommand = new SQLiteCommand(insertStatement, connection);
             insertCommand.ExecuteNonQuery();
             #endregion Setup
@@ -70,6 +70,37 @@ namespace Useful.Sqlite.Extensions.Tests
             TimeSpan expected = new TimeSpan(ticks);
 
             Assert.Equal(expected, actual);
+            #endregion Execution
+
+            #region Teardown
+            connection.Dispose();
+            #endregion Teardown
+        }
+
+        [Fact]
+        public void GetTimeSpanTicksFromLong_Test_Fail()
+        {
+            #region Setup
+            SQLiteConnection connection = new SQLiteConnection("Data Source = :memory:");
+            connection.Open();
+            string createTableStatement = "CREATE TABLE test (TimeSpan integer)";
+            SQLiteCommand createTableCommand = new SQLiteCommand(createTableStatement, connection);
+            createTableCommand.ExecuteNonQuery();
+            string insertStatement = $"INSERT INTO test VALUES ('asd')";
+            SQLiteCommand insertCommand = new SQLiteCommand(insertStatement, connection);
+            insertCommand.ExecuteNonQuery();
+            #endregion Setup
+
+            #region Execution
+            string selectStatement = "SELECT * FROM test";
+            SQLiteCommand selectCommand = new SQLiteCommand(selectStatement, connection);
+            SQLiteDataReader reader = selectCommand.ExecuteReader();
+            reader.Read();
+
+            string expectedMessage = "The value in column 0 could not be cast to long.";
+            Action action = () => reader.GetTimeSpanTicksFromLong(0);
+            Exception ex = Assert.Throws<InvalidCastException>(action);
+            Assert.Equal(expectedMessage, ex.Message);
             #endregion Execution
 
             #region Teardown

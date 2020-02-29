@@ -69,7 +69,7 @@ namespace Useful.Sqlite.Extensions.Tests
         [InlineData("2013-17-08", "yyyy-dd-MM")]
         [InlineData("03-19-2011", "MM-dd-yyyy")]
         [InlineData("20-05-2018", "dd-MM-yyyy")]
-        public void GetDateTime_Test_Pass(string testDateTime, string format)
+        public void GetDateTime_Format_Test_Pass(string testDateTime, string format)
         {
             SQLiteDatabaseSetup("DateTime", $"'{testDateTime}'");
 
@@ -87,7 +87,7 @@ namespace Useful.Sqlite.Extensions.Tests
         [InlineData("2013-17-08", "yyyy-dd-MM", "es-ES")]
         [InlineData("03-19-2011", "MM-dd-yyyy", "it-IT")]
         [InlineData("20-05-2018", "dd-MM-yyyy", "fr-FR")]
-        public void GetDateTimeIFormatProvider_Test_Pass(string testDateTime, string format, string culture)
+        public void GetDateTime_IFormatProvider_Test_Pass(string testDateTime, string format, string culture)
         {
             CultureInfo cultureInfo = new CultureInfo(culture);
             SQLiteDatabaseSetup("DateTime", $"'{testDateTime}'");
@@ -101,6 +101,55 @@ namespace Useful.Sqlite.Extensions.Tests
             SQLiteDatabaseTearDown();
         }
         #endregion GetDateTime Tests
+
+        #region GetDateTimeNullable Tests
+        [Theory]
+        [InlineData("'2012-05-18'", "yyyy-MM-dd")]
+        [InlineData("'2013-17-08'", "yyyy-dd-MM")]
+        [InlineData("null", "MM-dd-yyyy")]
+        [InlineData("'20-05-2018'", "dd-MM-yyyy")]
+        public void GetDateTimeNullable_Format_Test_Pass(string testDateTime, string format)
+        {
+            SQLiteDatabaseSetup("DateTime", $"{testDateTime}");
+
+            SQLiteDataReader reader = SQLiteSelectDataReader();
+            DateTime? actual = reader.GetDateTimeNullable(0, format);
+            DateTime? expected;
+
+            if (testDateTime == "null")
+                expected = null;
+            else
+                expected = DateTime.ParseExact(testDateTime.Replace("'", ""), format, null);
+
+            Assert.Equal(expected, actual);
+
+            SQLiteDatabaseTearDown();
+        }
+
+        [Theory]
+        [InlineData("'2012-05-18'", "yyyy-MM-dd", "en-US")]
+        [InlineData("'2013-17-08'", "yyyy-dd-MM", "es-ES")]
+        [InlineData("null", "MM-dd-yyyy", "it-IT")]
+        [InlineData("'20-05-2018'", "dd-MM-yyyy", "fr-FR")]
+        public void GetDateTimeNullable_IFormatProvider_Test_Pass(string testDateTime, string format, string culture)
+        {
+            CultureInfo cultureInfo = new CultureInfo(culture);
+            SQLiteDatabaseSetup("DateTime", $"{testDateTime}");
+
+            SQLiteDataReader reader = SQLiteSelectDataReader();
+            DateTime? actual = reader.GetDateTimeNullable(0, format, cultureInfo);
+            DateTime? expected;
+
+            if (testDateTime == "null")
+                expected = null;
+            else
+                expected = DateTime.ParseExact(testDateTime.Replace("'", ""), format, null);
+
+            Assert.Equal(expected, actual);
+
+            SQLiteDatabaseTearDown();
+        }
+        #endregion GetDateTimeNullable Tests
 
         /// <summary>
         /// Opens the connection to the in-memory database, creates a table and inserts a value into it.
